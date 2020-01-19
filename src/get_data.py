@@ -2,14 +2,16 @@ import requests
 import os
 import argparse
 import zipfile
+from itertools import accumulate
 
 parser = argparse.ArgumentParser()
 
 def folder(save_dir):
     # Create target Directory if don't exist
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-        print(f"Directory {save_dir} Created ")
+    for subdir in accumulate(save_dir.split('/'), lambda x, y: os.path.join(x, y)):
+        if not os.path.exists(subdir):
+            os.mkdir(subdir)
+            print(f"Directory {subdir} Created ")
     
     return save_dir
 
@@ -43,7 +45,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_dir', type=folder,
             required=False, help='The folder where the data will be saved',
-            default='./data')
+            default='../data/raw/')
 
     args = parser.parse_args()
 
