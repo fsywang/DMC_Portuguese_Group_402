@@ -1,1 +1,0 @@
-This folder contains cleaned data to be used in the project
