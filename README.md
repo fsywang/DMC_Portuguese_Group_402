@@ -5,7 +5,7 @@ Shiying Wang,  Karlos Muradyan, Gaurav Sinha
 
 # Report
 
-The final report can be found [here]().
+The final report can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/doc/report.ipynb).
 
 # Usage
 
@@ -19,7 +19,7 @@ Rscript src/get_data.R
 
 
 # eda
-python src/eda.py "data/clean/bank_train_unprocessed.csv" "results"
+python src/eda.py "data/clean/bank_train_unprocessed.csv" "reports"
 
 # predictive models
 

@@ -9,6 +9,13 @@ lightgbm==2.3.2
 numpy==1.18.1
 tqdm==4.37.0
 docopt==0.6.2
+selenium = 3.141.0
+
 
 - R version 3.6.1 and R packages:
 testthat=2.2.1
+docopt = 0.6.1
+
+- Systerm requirement:
+
+chromedriver: $ brew cask install chromedriver

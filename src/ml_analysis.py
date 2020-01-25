@@ -1,3 +1,26 @@
+# author: Karlos Muradyan
+# date: 2020-01-24
+
+'''This script does ML analysis by training multiple models, doing hyperparameter
+tuning and reporting the results in a csv file.
+
+Usage: 
+    ml_analysis.py --train_csv=<train_csv> --test_csv=<test_csv> --output_csv=<output_csv>
+    ml_analysis.py --test_csv=<test_csv> --output_csv=<output_csv>
+    ml_analysis.py --train_csv=<train_csv> --output_csv=<output_csv>
+    ml_analysis.py --train_csv=<train_csv> --test_csv=<test_csv>
+    ml_analysis.py --train_csv=<train_csv>
+    ml_analysis.py --test_csv=<test_csv>
+    ml_analysis.py --output_csv=<output_csv>
+    ml_analysis.py
+
+Options:
+--train_csv=<train_csv>         csv path for training [Default: ../data/clean/bank_train.csv].
+--test_csv=<test_csv>           csv path for testing [Default: ../data/clean/bank_test.csv].
+--output_csv=<output_csv>       csv path for outputting the result of training and hyperparameter tuning.
+                                [Default: ../reports/training_report.csv]
+'''
+
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -6,6 +29,33 @@ from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.model_selection import GridSearchCV
 from tqdm import tqdm
 import lightgbm as lgb
+from docopt import docopt
+from itertools import accumulate
+import warnings
+import os
+
+os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+
+def check_filepath(save_dir):
+    """
+    Checks if all subfolders of save_dir exist or not. If not, creates
+
+    Parameters
+    ----------
+    save_dir: str containing the path where the files hould be saved
+
+    Returns:
+    None
+
+    Usage
+    -----
+    check_filepath('./unknown_dir')
+    """
+    for subdir in accumulate(save_dir.split('/'), lambda x, y: os.path.join(x, y)):
+        if not os.path.exists(subdir):
+            os.mkdir(subdir)
+            print(f"Directory {subdir} Created ")
+
 
 def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 100):
     """
@@ -57,7 +107,8 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
                        valid_sets=[lgb_train, lgb_test],
                        feval = lgb_f1_score,
                        num_boost_round=epochs,
-                       early_stopping_rounds=early_stopping)
+                       early_stopping_rounds=early_stopping,
+                       verbose_eval=False)
 
     # Getting train F1 score
     lgb_train_preds = np.round(model.predict(X_train))
@@ -114,9 +165,12 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
      0.901657458563536)
     """
     # Find the best model
-    grid_search = GridSearchCV(classifier, parameters, n_jobs=-1, scoring=scoring)
-    grid_search.fit(X, y)
-
+    try:
+        grid_search = GridSearchCV(classifier, parameters, n_jobs=-1, scoring=scoring)
+        grid_search.fit(X, y)
+    except ValueError:
+        pass
+    
     report = None
 
     # Test best model on test set and produce classification report
@@ -168,6 +222,9 @@ def generate_csv_report(arr, filepath):
                               'Test F1': test_f1s,
                               'Test accuracies': test_accuracies})
     
+    # Check for existance of a filepath
+    check_filepath(filepath.rsplit('/', 1)[0])
+
     # Saving the report
     csv_report.to_csv(filepath)
 
@@ -186,16 +243,27 @@ def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
     -------
     tuple: (X_train, y_train, X_test, y_test)
     """
-    train_ds = pd.read_csv(train_csv_path)
-    test_ds = pd.read_csv(test_csv_path)
+    try:
+        train_ds = pd.read_csv(train_csv_path)
+        test_ds = pd.read_csv(test_csv_path)
+    except (FileNotFoundError) as e:
+        print('Please check train and test filepaths')
+        raise(e)
 
-    X_train, y_train = train_ds.drop('y_yes', axis=1), train_ds['y_yes']
-    X_test, y_test = test_ds.drop('y_yes', axis=1), test_ds['y_yes']
+    try:
+        X_train, y_train = train_ds.drop('y_yes', axis=1), train_ds['y_yes']
+        X_test, y_test = test_ds.drop('y_yes', axis=1), test_ds['y_yes']
+    except KeyError:
+        print('Corrupted csv files. Please check the columns')
+        raise KeyError
 
     return X_train, y_train, X_test, y_test
 
-def main():
-    X_train, y_train, X_test, y_test = read_data_and_split()
+def main(train_csv, test_csv, output_csv):
+    try:
+        X_train, y_train, X_test, y_test = read_data_and_split(train_csv, test_csv)
+    except:
+        return
 
     # Define models that should be passed to hyperparameter tuning
     models = [LogisticRegression(),
@@ -203,9 +271,14 @@ def main():
 
     # Define parameters that should be tested for each of the models. 
     # Note: Be sure that indices of models and its parameters correspond.
+    # Note2: Each model should have some valid dictionalry associated with it.
     parameters = [
         {'penalty': ['l1', 'l2'], 'C': [0.1, 1, 10]},
     ]
+
+    if len(models) != len(parameters):
+        print('Check models and corresponding parameters. Each model should have a dictionary of parameters to test.')
+        return
 
     # Performing hyperparameter tuning and getting reports of each of the models
     # defined above
@@ -220,7 +293,8 @@ def main():
     all_results.append(lgb_model_res)
 
     # Generating and saving model results
-    generate_csv_report(all_results, '../reports/final_report.csv')
+    generate_csv_report(all_results, output_csv)
 
 if __name__ == '__main__':
-    main()
+    opt = docopt(__doc__)
+    main(opt["--train_csv"], opt["--test_csv"], opt["--output_csv"])

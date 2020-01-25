@@ -7,7 +7,7 @@ This script takes a filename as the arguments.
 Usage: eda.py <train> <out_dir>
   
 Options:
-<train>     Path (including filename) to training data
+<train> Path (including filename) to training data
 <out_dir> Path to directory where the plots should be saved
 '''
 
@@ -22,11 +22,23 @@ from docopt import docopt
 opt = docopt(__doc__)
 # define main function
 def main(train, out_dir):
+    #test input 
+    assert out_dir.endswith('/') == False, "out_dir cannot end with '/'"
+    
     #load data
     bank_train = pd.read_csv(train)
+
+    # tests case
+    assert bank_train.shape[1] == 17, "should have 17 columns"
+    assert all(bank_train.columns == ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing',
+       'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays',
+       'previous', 'poutcome', 'y']), "input column name is wrong'"
+
     # check if the folder exist
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
+
+
     #proportion plot
     p0 = alt.Chart(bank_train, title = "Proportion of two classes").mark_bar().encode(
         x = alt.X('count()'),
@@ -55,16 +67,22 @@ def main(train, out_dir):
         """
         plot count of categorical features.
 
-        Argument:
-            cat_list (list) - list of strings contains features name
-        
-        Return:
+        Parameters
+        ----------
+            list: cat_list 
+            list of strings contains features name
+
+        Returns
+        -------
+        altair.vegalite.v3.api.Chart
             altair plots
-        
-        Example:
+
+        Examples
+        --------
             make_cat_plot(['job', 'marital', 'education'])
 
         """
+
         cat_p  = alt.Chart(bank_train).mark_bar(opacity = 0.8).encode(
             alt.X(alt.repeat("row"), type = 'nominal'),
             alt.Y("count()"),
@@ -75,16 +93,13 @@ def main(train, out_dir):
             ).repeat(
             row = cat_list
         )     
-        
-        return cat_p
-
+        return cat_p   
     p = make_cat_plot(['job', 'marital', 'education']) | make_cat_plot(['default', 'housing', 'loan']) |make_cat_plot(['contact', 'poutcome', 'month'])
     p
 
     p.save( out_dir + "/count_of_cat_features.png")
     
-    
-    
+
 # call main function
 if __name__ == "__main__":
     main(opt["<train>"], opt["<out_dir>"])
