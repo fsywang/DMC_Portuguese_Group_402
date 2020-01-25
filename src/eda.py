@@ -50,20 +50,38 @@ def main(train, out_dir):
     #pariplot
     pairplot_numeric = sns.pairplot(bank_train,hue='y')
     pairplot_numeric.savefig("../"+ out_dir + "/pairplot_numeric.png")
-    #categorical features columns
-    cat_columns = ['job', 'marital', 'education', 'month'
-                   'default', 'housing', 'loan', 'contact', 'poutcome']
+    # plot count of categorical features
+    def make_cat_plot(cat_list):
+        """
+        plot count of categorical features.
 
-    for col in cat_columns:
-        p = alt.Chart(bank_train, title = "Count of {}".format(col)).mark_bar(opacity = 0.8).encode(
-            x = alt.X('count({}):Q'.format(col)),
-                y= alt.Y('{}:O'.format(col), 
-                  sort=alt.EncodingSortField(
-                    field= "{}".format(col),
-                    op= "count",
-                    order= "descending")),
-            color='y')
-        p.save("../"+ out_dir + "/count_of_{}.png".format(col))
+        Argument:
+            cat_list (list) - list of strings contains features name
+        
+        Return:
+            altair plots
+        
+        Example:
+            make_cat_plot(['job', 'marital', 'education'])
+
+        """
+        cat_p  = alt.Chart(bank_train).mark_bar(opacity = 0.8).encode(
+            alt.X(alt.repeat("row"), type = 'nominal'),
+            alt.Y("count()"),
+            color='y'
+        ).properties(
+                width=200,
+                height=150
+            ).repeat(
+            row = cat_list
+        )     
+        
+        return cat_p
+
+    p = make_cat_plot(['job', 'marital', 'education']) | make_cat_plot(['default', 'housing', 'loan']) |make_cat_plot(['contact', 'poutcome', 'month'])
+    p
+
+    p.save("../"+ out_dir + "/count_of_cat_features.png")
     
     
     
