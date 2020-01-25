@@ -25,8 +25,8 @@ from sklearn.model_selection import train_test_split
 
 def main():
     input_file = '../data/raw/bank.csv'
-    out_train_file = 'data/clean/bank_train.csv'
-    out_test_file = 'data/clean/bank_test.csv'
+    out_train_file = '../data/clean/bank_train.csv'
+    out_test_file = '../data/clean/bank_test.csv'
     test_split_size = 0.2
     unproc_train_req = True
     unproc_test_req = False
