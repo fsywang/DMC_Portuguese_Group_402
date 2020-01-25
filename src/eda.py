@@ -25,20 +25,20 @@ def main(train, out_dir):
     #load data
     bank_train = pd.read_csv(train, sep = ";")
     # check if the folder exist
-    if not os.path.exists("../" + out_dir):
-        os.mkdir("../" + out_dir)
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     #proportion plot
     p0 = alt.Chart(bank_train, title = "Proportion of two classes").mark_bar().encode(
         x = alt.X('count()'),
         y = alt.Y('y:O'))
     
-    p0.save("../"+ out_dir + "/proportion_of_class.png")
+    p0.save( out_dir + "/proportion_of_class.png")
     
     #pearson corrlation matrix plot
     pearson_corr_matrix = sns.heatmap(bank_train.corr(), annot=True)
     pearson_corr_matrix.set_title('Pearson correlation matrix')
     p1 = pearson_corr_matrix.get_figure()
-    p1.savefig("../"+ out_dir + "/pearson_corr_matrix.png")
+    p1.savefig( out_dir + "/pearson_corr_matrix.png")
     
     plt.clf()
     #kendall corrlation matrix plot
@@ -46,10 +46,10 @@ def main(train, out_dir):
                                       annot=True)
     kendall_corr_matrix.set_title('Kendall correlation matrix')
     p2 = kendall_corr_matrix.get_figure()
-    p2.savefig("../"+ out_dir + "/kendall_corr_matrix.png")
+    p2.savefig( out_dir + "/kendall_corr_matrix.png")
     #pariplot
     pairplot_numeric = sns.pairplot(bank_train,hue='y')
-    pairplot_numeric.savefig("../"+ out_dir + "/pairplot_numeric.png")
+    pairplot_numeric.savefig( out_dir + "/pairplot_numeric.png")
     # plot count of categorical features
     def make_cat_plot(cat_list):
         """
@@ -81,7 +81,7 @@ def main(train, out_dir):
     p = make_cat_plot(['job', 'marital', 'education']) | make_cat_plot(['default', 'housing', 'loan']) |make_cat_plot(['contact', 'poutcome', 'month'])
     p
 
-    p.save("../"+ out_dir + "/count_of_cat_features.png")
+    p.save( out_dir + "/count_of_cat_features.png")
     
     
     
