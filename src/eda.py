@@ -23,7 +23,7 @@ opt = docopt(__doc__)
 # define main function
 def main(train, out_dir):
     #load data
-    bank_train = pd.read_csv(train, sep = ";")
+    bank_train = pd.read_csv(train)
     # check if the folder exist
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
