@@ -9,6 +9,25 @@ The final report can be found [here]().
 
 # Usage
 
+To replicate the analysis, clone this GitHub repository, install all [dependencies](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt), and run the following commands:
+
+```
+# download data
+Rscript src/get_data.R
+
+# data preprocessing
+
+
+# eda
+python src/eda.py "data/clean/bank_train_unprocessed.csv" "img"
+
+# predictive models
+
+
+# report
+
+```
+
 # Dependencies
 
 The dependencies can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt)
