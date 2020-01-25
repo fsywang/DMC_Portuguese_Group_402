@@ -176,7 +176,7 @@ def test_write_file():
     
 
 test_split_dir_file()
-test_write_file
+test_write_file()
 
 
         
