@@ -1,0 +1,3 @@
+,Model name,Best parameters,Train F1,Test F1,Test accuracies
+0,LogisticRegression,"{'C': 10, 'penalty': 'l2'}",0.43209194041441296,0.3776223776223776,0.901657458563536
+1,Booster,"{'learning_rate': 0.01, 'lambda_l2': 0.5}",0.6242424242424243,0.3972602739726027,0.9027624309392265
