@@ -41,11 +41,12 @@ def test_csv_report():
     Testing generate_csv_report() method of ml_analysis.py file
     """
     from sklearn.linear_model import LogisticRegression
-    sample_arr = (LogisticRegression(), {'param1': 'best_val'}, 0.8, 0.7, 0.8)
+    sample_arr = (LogisticRegression(), {'param1': 'best_val'}, 0.8, 0.7, 0.8, [0.5, 0.3], [0.7, 0.9])
 
-    ml_analysis.generate_csv_report([sample_arr], './test_files/report.csv')
+    ml_analysis.generate_csv_and_figure_reports([sample_arr], './test_files/report.csv', './test_files/report.png')
 
     assert os.path.exists('./test_files/report.csv'), 'The function should successfully generate csv file'
+    assert os.path.exists('./test_files/report.png'), 'The function should successfully generate png file'
 
 test_subfolder_creation()
 test_non_existing_file_input()
