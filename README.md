@@ -19,7 +19,7 @@ Rscript src/get_data.R
 
 
 # eda
-python src/eda.py "data/clean/bank_train_unprocessed.csv" "img"
+python src/eda.py "data/clean/bank_train_unprocessed.csv" "results"
 
 # predictive models
 
