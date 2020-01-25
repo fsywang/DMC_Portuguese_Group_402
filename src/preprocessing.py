@@ -5,36 +5,44 @@
 This script does splitting and preprocessing of the input file and returns
 preprocessed test and training data file
 
-Usage: preprocessing.py <arg1> --arg2=<arg2> [--arg3=<arg3>]
+Usage: src/preprocessing.py --input_file=<input_file> --out_train_file=<out_train_file> --out_test_file=<out_test_file> [--test_split_size=<test_split_size>] [--unproc_train_req=<unproc_train_req>]
 
 Options:
-<arg>             Takes any value (this is a required positional argument)
---arg2=<arg2>     Takes any value (this is a required option)
-[--arg3=<arg3>]   Takes any value (this is an optional option)
-
+--input_file=<input_file>                   The location of the input file(with file name) on which preprocessing is to be performed
+--out_train_file=<out_train_file>           The location where the preprocessed train file(with file name) is to be stored
+--out_test_file=<out_test_file>             The location where the preprocessed test file(with file name) is to be stored
+--[test_split_size=<test_split_size>]       The proportion of data requred as test set[default: 0.2]
+--[unproc_train_req=<unproc_train_req>]     The flag indicating whether unprocessed train file required or not for EDA[default: True ]
 """
 
-
+#Importing libraries
 import os
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
+from docopt import docopt
+
+opt = docopt(__doc__)
 
 
-def main():
-    input_file = '../data/raw/bank.csv'
-    out_train_file = '../data/clean/bank_train.csv'
-    out_test_file = '../data/clean/bank_test.csv'
-    test_split_size = 0.2
-    unproc_train_req = True
-    unproc_test_req = False
+def main(input_file,out_train_file,out_test_file,test_split_size,unproc_train_req):
+    #Initializing variables
     unproc_train_file = None
-    unproc_test_file = None
     
+    if test_split_size == None:
+        test_split_size=0.2
+    else:
+        test_split_size = float(test_split_size)
+        
     
-    
+    if unproc_train_req == None:
+        unproc_train_req=True
+    else:
+        unproc_train_req=bool(unproc_train_req)
+        
+    #Reading csv file 
     bank_df = pd.read_csv(input_file,sep = ';')
     
     
@@ -47,7 +55,7 @@ def main():
     numeric_features = ['age','balance','duration', 'campaign','pdays','previous']
     
     
-    
+    #Transforming categorical variable to one hot encoding and scaling numerical feature
     preprocessor = ColumnTransformer(transformers=[
         ('ss', StandardScaler(), numeric_features),
         ('ohe', OneHotEncoder(drop='first'), categorical_features)])
@@ -74,24 +82,38 @@ def main():
     
     bank_test = pd.DataFrame(data = bank_test_array, columns=cols)
     
-    
+    #Writing train and test processed file
     write_file(bank_train,out_train_file)
     write_file(bank_test,out_test_file)
     
+    #Writing train unprocessed file for EDA
     if unproc_train_req:
         if unproc_train_file == None:
             split_list = out_train_file.split('.')
             unproc_train_file = split_list[0] + '_unprocessed.csv'
         write_file(bank_train_raw,unproc_train_file)
     
-    if unproc_test_req :
-        if unproc_test_file == None:
-            split_list = out_test_file.split('.')
-            unproc_test_file = split_list[0] + '_unprocessed.csv'
-        write_file(bank_test_raw,unproc_test_file)
     
     
 def split_dir_file(path):
+    """
+    This function separates file path and file name
+    
+    Parameters:
+    -----------
+    path: string
+        path of a file with file name
+    
+    Returns:
+    --------
+    tuple
+        Returns a tuple of directory path and file name
+    
+    Examples:
+    ---------
+    >>> split_dir_file('data/clean/banking.csv')
+    ('data/clean','banking.csv')
+    """
     path_list = path.split('/')
     file_name = path_list[-1]
             
@@ -104,7 +126,25 @@ def split_dir_file(path):
     
     
 def write_file(df,file_path):
-        
+    """
+    This function takes in dataframe and write it in specified path
+    
+    Parameters:
+    -----------
+    df: pandas.DataFrame
+        The dataframe to be written in csv file
+    path: string
+        Path of a file with file name
+    
+    Returns:
+    --------
+    tuple
+        Returns a tuple of directory path and file name
+    
+    Examples:
+    ---------
+    >>> write_file(df,'data/clean/banking.csv')
+    """
     path = split_dir_file(file_path)[0]  
     
     try:
@@ -117,5 +157,29 @@ def write_file(df,file_path):
     else:
         print ("Successfully created the file ",file_path)
         
+def test_split_dir_file():
+    assert split_dir_file('data/clean/banking.csv') == ('data/clean','banking.csv')
+    
+def test_write_file():
+    df = pd.DataFrame({
+        'x':[1,2],
+        'y':[2,3]
+    })
+    
+    file_path = 'testing/test.csv'
+    write_file(df,file_path)
+    
+    assert os.path.isfile(file_path)==True
+    
+    os.unlink(file_path)
+    os.rmdir('testing')
+    
+
+test_split_dir_file()
+test_write_file()
+
+
+        
 if __name__ == "__main__":
-    main()
+    main(opt['--input_file'],opt['--out_train_file'],opt['--out_test_file'],opt['--test_split_size'],opt['--unproc_train_req'])
+
