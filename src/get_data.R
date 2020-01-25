@@ -10,28 +10,66 @@ Options:
 
 library(docopt)
 library(tools)
+
+
 arguments <- docopt(doc)
 
-filename <- gsub("^.*/", "", arguments$url)
-extension <- file_ext(arguments$url)
+main <- function () {
+	
+	dir.create(arguments$out_dir, showWarnings = FALSE)
 
-dir.create(arguments$out_dir, showWarnings = FALSE)
-
-downloaded_filepath <- file.path(arguments$out_dir, filename)
-
-print('Downloading file')
-download.file(arguments$url, downloaded_filepath)
-
-if (file.exists(downloaded_filepath)){
-	print(paste('File is stored in :', downloaded_filepath))
+	filename <- gsub("^.*/", "", arguments$url)
+	filepath <- file.path(arguments$out_dir, filename)
+	if(!download_data(arguments$url, filepath)){
+		return()
+	}
+	
+	
+	extension <- file_ext(filename)
 	if(extension == 'zip'){
 		print('Unzipping the downloaded file')
-		unzip(downloaded_filepath, exdir=arguments$out_dir)
+		unzip_data(filepath, arguments$out_dir)
 	} else {
 		print(paste('Not unzipping. The file extension is not zip. It is ', extension))
 	}
-} else {
-	print('File has not been downloaded in some reason. Please check your internet connection')
 }
 
+download_data <- function(url, filepath) {
+	return(tryCatch({
+		print('Downloading file')
+		download.file(url, filepath)
 
+		if (file.exists(filepath)){
+			print(paste('File is stored in :', filepath))
+			return(TRUE)
+		} else {
+			print('File has not been downloaded for some reason. Please check your internet connection')
+			return(FALSE)
+		}
+	}, warning=function(cond) {
+            	message(paste("URL caused a warning:", url))
+		message('Check the URL!!')
+            	return(FALSE)
+        }, error = function(cond) {
+		message(paste("URL does not seem to exist:", url))
+            	return(FALSE)
+	}))
+}
+
+unzip_data <- function(filepath, out_dir) {
+	print(paste('Unzipping file: ', filepath))
+	return(tryCatch({
+		unzip(filepath, exdir=out_dir)
+		return(TRUE)
+	}, warning=function(cond) {
+		message('Cannot unzip: Check file!!')
+            	return(FALSE)
+        }, error = function(cond) {
+		message(paste("Cannot unzip: Check file!"))
+            	return(FALSE)
+	})) 
+}
+
+if (sys.nframe() == 0){
+  main()
+}
