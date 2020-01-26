@@ -15,12 +15,12 @@ Usage:
     ml_analysis.py
 
 Options:
---train_csv=<train_csv>         csv path for training [Default: ../data/clean/bank_train.csv].
---test_csv=<test_csv>           csv path for testing [Default: ../data/clean/bank_test.csv].
+--train_csv=<train_csv>         csv path for training [Default: ./data/clean/bank_train.csv].
+--test_csv=<test_csv>           csv path for testing [Default: ./data/clean/bank_test.csv].
 --output_csv=<output_csv>       csv path for outputting the result of training and hyperparameter tuning.
-                                [Default: ../reports/training_report.csv]
+                                [Default: ./reports/training_report.csv]
 --output_png=<output_png>       png path for outputting the result of figure containing all trainings
-                                [Default: ../reports/training_report.png]
+                                [Default: ./reports/training_report.png]
 '''
 
 import pandas as pd
@@ -36,7 +36,6 @@ from tqdm import tqdm
 import lightgbm as lgb
 from docopt import docopt
 from itertools import accumulate
-import warnings
 import os
 import altair as alt
 import selenium
