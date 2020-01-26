@@ -43,6 +43,7 @@ import selenium
 
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 np.random.RandomState(42)
+np.random.seed(2020)
 
 def check_filepath(save_dir):
     """
@@ -192,19 +193,25 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
     except ValueError:
         pass
     
-    report = None
+    test_f1 = None
+    test_accuracy = None
+
+    y_train_pred = grid_search.predict(X)
+    train_report = classification_report(y, y_train_pred, output_dict=True)
 
     # Test best model on test set and produce classification report
     if X_test is not None and y_test is not None:
         y_test_pred = grid_search.predict(X_test)
         report = classification_report(y_test, y_test_pred, output_dict=True)
+        test_f1 =    report['1.0']['f1-score'], 
+        test_accuracy =    report['accuracy'], 
 
     # Return whatever is important
     return (grid_search.best_estimator_, 
             grid_search.best_params_, 
-            grid_search.best_score_, 
-            report['1.0']['f1-score'], 
-            report['accuracy'], 
+            train_report['1.0']['f1-score'], 
+            test_f1,
+            test_accuracy,
             grid_search.cv_results_['mean_train_score'], 
             grid_search.cv_results_['mean_test_score'])
 
