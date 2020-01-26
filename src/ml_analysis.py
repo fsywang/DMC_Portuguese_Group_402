@@ -26,9 +26,12 @@ Options:
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import lightgbm as lgb
 from docopt import docopt
@@ -39,6 +42,7 @@ import altair as alt
 import selenium
 
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+np.random.RandomState(42)
 
 def check_filepath(save_dir):
     """
@@ -95,20 +99,29 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
         y_hat = np.round(y_hat) # scikits f1 doesn't like probabilities
         return 'f1', f1_score(y_true, y_hat), True
 
+    # Defining validation set
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.2)
+
     # Creating dataset objects for LightGBM
     lgb_train = lgb.Dataset(X_train, label=y_train)
-    lgb_test = lgb.Dataset(X_test, label=y_test)
+    lgb_valid = lgb.Dataset(X_valid, label=y_valid)
 
     # For all possible parameters see https://lightgbm.readthedocs.io/en/latest/Parameters.html
     params = {
-        "learning_rate" : 0.01,
-        "lambda_l2": 0.5,
+        "learning_rate" : 0.1,
+        "lambda_l1": 0.5,
+        "max_depth": 64,
+        "num_leaves": 32,
+        "bagging_fraction" : 0.9,
+        "bagging_freq": 3,
+        "bagging_seed": 42,
+        "seed": 42
     }
 
     # Training model
     model = lgb.train(params,
                        lgb_train,
-                       valid_sets=[lgb_train, lgb_test],
+                       valid_sets=[lgb_train, lgb_valid],
                        feval = lgb_f1_score,
                        num_boost_round=epochs,
                        early_stopping_rounds=early_stopping,
@@ -258,7 +271,7 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     csv_report.to_csv(csv_filepath)
 
     # Saving figure
-    alt.Chart(figure_report).mark_circle().encode(
+    alt.Chart(figure_report).mark_circle(size=100).encode(
         x = 'test_scores',
         y = 'train_scores',
         color = 'models').properties(
@@ -302,14 +315,21 @@ def main(train_csv, test_csv, output_csv, output_png):
         return
 
     # Define models that should be passed to hyperparameter tuning
-    models = [LogisticRegression(),
+    models = [LogisticRegression(class_weight = 'balanced', random_state=42),
+             SVC(class_weight = 'balanced', random_state=42),
+             RandomForestClassifier(class_weight = 'balanced', random_state=42)
              ]
+             
 
     # Define parameters that should be tested for each of the models. 
     # Note: Be sure that indices of models and its parameters correspond.
     # Note2: Each model should have some valid dictionalry associated with it.
     parameters = [
-        {'penalty': ['l1', 'l2'], 'C': [0.1, 1, 10]},
+            [{'solver': ['saga', 'liblinear'], 'penalty': ['l1', 'l2'], 'C': [0.01, 0.1, 1, 10]},
+             {'solver': ['lbfgs', 'newton-cg', 'sag'], 'penalty': ['l2'], 'C': [0.01, 0.1, 1, 10]}],
+            [{'C': [0.01, 0.1, 1, 10], 'kernel': ['rbf']},
+             {'C': [0.01, 0.1, 1, 10], 'kernel': ['poly'], 'degree': [2, 3, 4]}],
+            {'n_estimators': [25, 50, 75], 'max_depth': [None, 16, 32], 'criterion': ['gini', 'entropy']}
     ]
 
     if len(models) != len(parameters):
