@@ -5,6 +5,8 @@ Shiying Wang,  Karlos Muradyan, Gaurav Sinha
 
 In this project data used is related to direct marketing campaigns of a Portuguese banking institution.These marketing campaigns were based on phone calls. Often, more than one contact to the same client was required, to access if the product (bank term deposit) would be ('yes') or not ('no') subscribed. The data set contains 4521 instances and has 17 columns. The data set that we use is in our project is located in this [link](https://archive.ics.uci.edu/ml/machine-learning-databases/00222) and can be easily downloaded and extracted using our [python script](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/src/get_data.py). The dataset is publicly available for research, the details of which are described in [Moro et al., 2014].
 
+We aim to predict whether the client subscribed after marketing campaigns. Since this is a classification problem, we use Logistic Regression, SVM and Random Forest. Since the dataset is imbalance, we use F1-score as the evaluation metric, and we also tried Light GBM because it usually can handel imbalance situation. After doing hyper-parameter tuning (except for lightgbm), The SVM model returns the best F1-score (see [result](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/reports/training_report.csv)), which is 0.533.
+
 # Report
 
 The final report can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/doc/report.ipynb).
@@ -20,12 +22,12 @@ Rscript src/get_data.R
 # data preprocessing
 python src/preprocessing.py --input_file=data/raw/bank.csv --out_train_file=data/clean/bank_train.csv --out_test_file=data/bank_test.csv
 
-
 # eda
 python src/eda.py "data/clean/bank_train_unprocessed.csv" "reports"
 
 # predictive models
 
+python src/ml_analysis.py
 
 ```
 
