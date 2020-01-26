@@ -5,7 +5,7 @@
 tuning and reporting the results in a csv file.
 
 Usage: 
-    ml_analysis.py --train_csv=<train_csv> --test_csv=<test_csv> --output_csv=<output_csv>
+    ml_analysis.py --train_csv=<train_csv> --test_csv=<test_csv> --output_csv=<output_csv> --output_png=<output_png>
     ml_analysis.py --test_csv=<test_csv> --output_csv=<output_csv>
     ml_analysis.py --train_csv=<train_csv> --output_csv=<output_csv>
     ml_analysis.py --train_csv=<train_csv> --test_csv=<test_csv>
@@ -19,6 +19,8 @@ Options:
 --test_csv=<test_csv>           csv path for testing [Default: ../data/clean/bank_test.csv].
 --output_csv=<output_csv>       csv path for outputting the result of training and hyperparameter tuning.
                                 [Default: ../reports/training_report.csv]
+--output_png=<output_png>       png path for outputting the result of figure containing all trainings
+                                [Default: ../reports/training_report.png]
 '''
 
 import pandas as pd
@@ -33,6 +35,8 @@ from docopt import docopt
 from itertools import accumulate
 import warnings
 import os
+import altair as alt
+import selenium
 
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 
@@ -122,7 +126,7 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
     test_acc = sum(lgb_test_preds == y_test)/len(y_test)
 
     # Returning whatever is important
-    return model, params, train_f1, test_f1, test_acc
+    return model, params, train_f1, test_f1, test_acc, [train_f1], [test_f1]
 
 
 def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, y_test=None, scoring='f1'):
@@ -147,11 +151,11 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
 
     Returns
     -------
-    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy)
+    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy, Mean Train scores, Mean Test scores)
         
     Examples
     --------
-    >>>hyperparameter_tuning_and_report(LogisticRegression,
+    >>>hyperparameter_tuning_and_report(LogisticRegression(),
                                         {'penalty': ['l1', 'l2'], 'C': [0.1, 1, 10]},
                                         X_train, y_train, X_test, y_test)
     (LogisticRegression(C=10, class_weight=None, dual=False, fit_intercept=True,
@@ -162,11 +166,15 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
      {'C': 10, 'penalty': 'l2'},
      0.43209194041441296,
      0.3776223776223776,
-     0.901657458563536)
+     0.901657458563536,
+     array([       nan, 0.37217253,        nan, 0.44838868,        nan,
+            0.45292401]),
+     array([       nan, 0.34413357,        nan, 0.42585911,        nan,
+            0.43209194]))
     """
     # Find the best model
     try:
-        grid_search = GridSearchCV(classifier, parameters, n_jobs=-1, scoring=scoring)
+        grid_search = GridSearchCV(classifier, parameters, n_jobs=-1, scoring=scoring, return_train_score=True)
         grid_search.fit(X, y)
     except ValueError:
         pass
@@ -179,9 +187,15 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
         report = classification_report(y_test, y_test_pred, output_dict=True)
 
     # Return whatever is important
-    return (grid_search.best_estimator_, grid_search.best_params_, grid_search.best_score_, report['1.0']['f1-score'], report['accuracy'])
+    return (grid_search.best_estimator_, 
+            grid_search.best_params_, 
+            grid_search.best_score_, 
+            report['1.0']['f1-score'], 
+            report['accuracy'], 
+            grid_search.cv_results_['mean_train_score'], 
+            grid_search.cv_results_['mean_test_score'])
 
-def generate_csv_report(arr, filepath):
+def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     """
     Generates csv report from the results obtained from hyperparameter tuning.
 
@@ -192,7 +206,8 @@ def generate_csv_report(arr, filepath):
     ----------
     arr: 1D array containing a tuple returned from hyperparameter_tuning_and_report or
         train_lgb() function.
-    filepath: str containing path where the report should be saved.
+    csv_filepath: str containing path where the report should be saved.
+    figure_filepath: str containing path where the figure report should be saved. Should have extension .png
 
     Returns
     -------
@@ -207,6 +222,10 @@ def generate_csv_report(arr, filepath):
     test_f1s = []
     test_accuracies = []
 
+    train_score_results = []
+    test_score_results = []
+    score_res_names = []
+
     # Gathering names of the models and other information
     for model in tqdm(arr):
         names.append(model[0].__class__.__name__)
@@ -215,6 +234,10 @@ def generate_csv_report(arr, filepath):
         test_f1s.append(model[3])
         test_accuracies.append(model[4])
     
+        train_score_results.extend(model[5])
+        test_score_results.extend(model[6])
+        score_res_names.extend([model[0].__class__.__name__]*len(model[5]))
+
     # Creating dataframe from the results
     csv_report = pd.DataFrame({'Model name': names,
                                'Best parameters': best_params,
@@ -222,11 +245,24 @@ def generate_csv_report(arr, filepath):
                               'Test F1': test_f1s,
                               'Test accuracies': test_accuracies})
     
+    # Creating dataframe from the results for figure generation
+    figure_report = pd.DataFrame({'models': score_res_names,
+                                 'train_scores': train_score_results,
+                                 'test_scores': test_score_results})
+
     # Check for existance of a filepath
-    check_filepath(filepath.rsplit('/', 1)[0])
+    check_filepath(csv_filepath.rsplit('/', 1)[0])
+    check_filepath(figure_filepath.rsplit('/', 1)[0])
 
     # Saving the report
-    csv_report.to_csv(filepath)
+    csv_report.to_csv(csv_filepath)
+
+    # Saving figure
+    alt.Chart(figure_report).mark_circle().encode(
+        x = 'test_scores',
+        y = 'train_scores',
+        color = 'models').properties(
+        title = 'Train and Test F1 scores of all methods tested').save(figure_filepath)
 
 def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
                         test_csv_path = '../data/clean/bank_test.csv'):
@@ -259,7 +295,7 @@ def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
 
     return X_train, y_train, X_test, y_test
 
-def main(train_csv, test_csv, output_csv):
+def main(train_csv, test_csv, output_csv, output_png):
     try:
         X_train, y_train, X_test, y_test = read_data_and_split(train_csv, test_csv)
     except:
@@ -293,8 +329,8 @@ def main(train_csv, test_csv, output_csv):
     all_results.append(lgb_model_res)
 
     # Generating and saving model results
-    generate_csv_report(all_results, output_csv)
+    generate_csv_and_figure_reports(all_results, output_csv, output_png)
 
 if __name__ == '__main__':
     opt = docopt(__doc__)
-    main(opt["--train_csv"], opt["--test_csv"], opt["--output_csv"])
+    main(opt["--train_csv"], opt["--test_csv"], opt["--output_csv"], opt["--output_png"])
