@@ -5,7 +5,7 @@ Usage:
 Options:
     -h --help  Show this screen.
     --url=<url>  URL of file [default: https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip]
-    --out_dir=<out_dir>  Directory to save the data [default: ../data/raw/]
+    --out_dir=<out_dir>  Directory to save the data [default: ./data/raw/]
 ' -> doc
 
 library(docopt)
