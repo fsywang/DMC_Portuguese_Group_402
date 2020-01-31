@@ -59,47 +59,88 @@ def main(train, out_dir):
     kendall_corr_matrix.set_title('Kendall correlation matrix')
     p2 = kendall_corr_matrix.get_figure()
     p2.savefig( out_dir + "/kendall_corr_matrix.png")
-    #pariplot
-    pairplot_numeric = sns.pairplot(bank_train,hue='y')
-    pairplot_numeric.savefig( out_dir + "/pairplot_numeric.png")
-    # plot count of categorical features
-    def make_cat_plot(cat_list):
-        """
-        plot count of categorical features.
 
-        Parameters
-        ----------
-            list: cat_list 
-            list of strings contains features name
 
-        Returns
-        -------
-        altair.vegalite.v3.api.Chart
-            altair plots
-
-        Examples
-        --------
-            make_cat_plot(['job', 'marital', 'education'])
-
-        """
-
-        cat_p  = alt.Chart(bank_train).mark_bar(opacity = 0.8).encode(
-            alt.X(alt.repeat("row"), type = 'nominal'),
-            alt.Y("count()"),
-            color='y'
-        ).properties(
-                width=200,
-                height=150
-            ).repeat(
-            row = cat_list
-        )     
-        return cat_p   
-    p = make_cat_plot(['job', 'marital', 'education']) | make_cat_plot(['default', 'housing', 'loan']) |make_cat_plot(['contact', 'poutcome', 'month'])
+    #density plot
+    density_plot= make_num_plot(bank_train, 'pdays') | make_num_plot(bank_train, 'duration')
+    density_plot.save( out_dir + "/density_plot.png")
+    # plot count
+    p = make_cat_plot(bank_train, ['job', 'default']) | make_cat_plot(bank_train, ['education', 'loan']) | make_cat_plot(bank_train, ['marital', 'housing'])
     p
 
     p.save( out_dir + "/count_of_cat_features.png")
     
+ # plot count of categorical features
+def make_cat_plot(dat, cat_list):
+    """
+    plot count of categorical features.
 
+    Parameters
+    ----------
+    list: cat_list 
+        list of strings contains features name
+    DataFrame: dat
+        input dataset
+
+    Returns
+    -------
+    altair.vegalite.v3.api.Chart
+        altair plots
+
+    Examples
+    --------
+        make_cat_plot(bank_train, ['job', 'default'])
+
+    """
+
+    cat_p  = alt.Chart(dat).mark_bar(opacity = 0.8).encode(
+        alt.X(alt.repeat("row"), type = 'nominal'),
+        alt.Y("count()"),
+        color='y'
+    ).properties(
+            width=200,
+            height=150
+        ).repeat(
+        row = cat_list
+    )     
+    return cat_p   
+
+def make_num_plot(dat, col):
+    """
+    density plot of numerical features.
+
+    Parameters
+    ----------
+    string: col 
+        column names
+    DataFrame: dat
+        input dataset
+
+    Returns
+    -------
+    altair.vegalite.v3.api.Chart
+        altair plots
+
+    Examples
+    --------
+        make_num_plot(bank_train, 'duration')
+
+    """
+    p = alt.Chart(dat, title = "Density plot of {}".format(col)).transform_density(
+    col,
+    as_=[col, 'density'],
+    groupby=['y']
+    ).mark_area(fillOpacity=0.3).encode(
+        x=col,
+        y='density:Q',
+        color='y'
+    ).properties(
+            width=400,
+            height=400
+        )
+    
+    return p
+    
 # call main function
 if __name__ == "__main__":
     main(opt["<train>"], opt["<out_dir>"])
