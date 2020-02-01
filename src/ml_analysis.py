@@ -222,6 +222,20 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
             cm)
 
 def save_confusion_matrix(model_names, cms, save_path):
+    """
+    Creates and saves confusion matrix figures containing all models
+    mentioned in the input arrays.
+
+    Parameters
+    ----------
+    model_names: array containing names of the models tested
+    csm: confusion matrices the models trained
+    save_path: str showing the filepath, where the figure should be saved
+
+    Returns
+    -------
+    None
+    """
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(16, 10))
 
     (ax1, ax2), (ax3, ax4) = axes
