@@ -13,22 +13,20 @@ The final report can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_G
 
 # Usage
 
-To replicate the analysis, clone this GitHub repository, install all [dependencies](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt), and run the following commands:
+To replicate the analysis, clone this GitHub repository, install all [dependencies](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt), and run the following command from the root of the repo:
 
 ```
-# download data
-Rscript src/get_data.R
+make all
+```
+In order to reset the repo,bring back to a clean state and clean all intermediary files and results, run the following command from project root directory:
 
-# data preprocessing
-python src/preprocessing.py --input_file=data/raw/bank.csv --out_train_file=data/clean/bank_train.csv --out_test_file=data/bank_test.csv
+```
+make clean_all
+```
+To only delete the `data` folder so that report images render, run the following command from the root directory:
 
-# eda
-python src/eda.py "data/clean/bank_train_unprocessed.csv" "reports"
-
-# predictive models
-
-python src/ml_analysis.py
-
+```
+make clean_data
 ```
 
 # Dependencies
