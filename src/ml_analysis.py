@@ -39,6 +39,8 @@ from itertools import accumulate
 import os
 import altair as alt
 import selenium
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 np.random.RandomState(42)
@@ -82,7 +84,7 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
 
     Returns
     -------
-    tuple: (model, parameters, Train F1 score, Test F1 score, Test accuracy)
+    tuple: (model, parameters, Train F1 score, Test F1 score, Test accuracy, confusion_matrix)
         
     Examples
     --------
@@ -138,8 +140,11 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
     # Getting test accuracy
     test_acc = sum(lgb_test_preds == y_test)/len(y_test)
 
+    # Getting confusion matrix
+    cm = confusion_matrix(y_test, lgb_test_preds)
+
     # Returning whatever is important
-    return model, params, train_f1, test_f1, test_acc, [train_f1], [test_f1]
+    return model, params, train_f1, test_f1, test_acc, [train_f1], [test_f1], cm
 
 
 def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, y_test=None, scoring='f1'):
@@ -164,7 +169,7 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
 
     Returns
     -------
-    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy, Mean Train scores, Mean Test scores)
+    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy, Mean Train scores, Mean Test scores, confusion_matrices)
         
     Examples
     --------
@@ -204,6 +209,7 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
         report = classification_report(y_test, y_test_pred, output_dict=True)
         test_f1 =    report['1.0']['f1-score'], 
         test_accuracy =    report['accuracy'], 
+        cm = confusion_matrix(y_test, y_test_pred)
 
     # Return whatever is important
     return (grid_search.best_estimator_, 
@@ -212,7 +218,81 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
             test_f1,
             test_accuracy,
             grid_search.cv_results_['mean_train_score'], 
-            grid_search.cv_results_['mean_test_score'])
+            grid_search.cv_results_['mean_test_score'],
+            cm)
+
+def save_confusion_matrix(model_names, cms, save_path):
+    """
+    Creates and saves confusion matrix figures containing all models
+    mentioned in the input arrays.
+
+    Parameters
+    ----------
+    model_names: array containing names of the models tested
+    csm: confusion matrices the models trained
+    save_path: str showing the filepath, where the figure should be saved
+
+    Returns
+    -------
+    None
+    """
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(16, 10))
+
+    (ax1, ax2), (ax3, ax4) = axes
+
+    cols = ListedColormap([[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]])
+
+    im1 = ax1.matshow(cms[0], cmap=cols)
+    im2 = ax2.matshow(cms[1], cmap=cols)
+    im3 = ax3.matshow(cms[2], cmap=cols)
+    im4 = ax4.matshow(cms[3], cmap=cols)
+
+    ax = (ax1, ax2, ax3, ax4)
+
+    for i, model_name in enumerate(model_names):
+
+        for y in range(cms[i].shape[0]):
+            for x in range(cms[i].shape[1]):
+                ax[i].text(x, y, f'{cms[i][y, x]}',
+                         horizontalalignment='center',
+                         verticalalignment='center',
+                         fontdict = {'size': 16, 'weight': 'bold'}
+                         )
+                ax[i].set_xticklabels(['', 'Predicted 0', 'Predicted 1'])
+                ax[i].set_yticklabels(['', 'Actual 0', 'Actual 1'])
+
+        ax[i].title.set_text(f'Confusion matrix of {model_name}')
+    # for y in range(a.shape[0]):
+    #     for x in range(a.shape[1]):
+    #         ax2.text(x, y, '%.4f' % a[y, x],
+    #                  horizontalalignment='center',
+    #                  verticalalignment='center',
+    #                  )
+    #         
+    # for y in range(a.shape[0]):
+    #     for x in range(a.shape[1]):
+    #         ax3.text(x, y, '%.4f' % a[y, x],
+    #                  horizontalalignment='center',
+    #                  verticalalignment='center',
+    #                  )
+
+    # for y in range(a.shape[0]):
+    #     for x in range(a.shape[1]):
+    #         ax4.text(x, y, '%.4f' % a[y, x],
+    #                  horizontalalignment='center',
+    #                  verticalalignment='center',
+    #                  )
+
+    # model_name = 'aa'
+    #         
+    # ax1.title.set_text(f'confusion matrix of {model_name}')
+    # ax2.title.set_text(f'confusion matrix of {model_name}')
+    # ax3.title.set_text(f'confusion matrix of {model_name}')
+    # ax4.title.set_text(f'confusion matrix of {model_name}')        
+
+    check_filepath(save_path.rsplit('/', 1)[0])
+
+    fig.savefig(save_path)
 
 def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     """
@@ -245,6 +325,8 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     test_score_results = []
     score_res_names = []
 
+    cms = []
+
     # Gathering names of the models and other information
     for model in tqdm(arr):
         names.append(model[0].__class__.__name__)
@@ -252,6 +334,7 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
         train_f1s.append(model[2])
         test_f1s.append(model[3])
         test_accuracies.append(model[4])
+        cms.append(model[7].astype(int))
     
         if model[0].__class__.__name__ != 'Booster':
             train_score_results.extend(model[5])
@@ -263,7 +346,8 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
                                'Best parameters': best_params,
                               'Train F1': train_f1s,
                               'Test F1': test_f1s,
-                              'Test accuracies': test_accuracies})
+                              'Test accuracies': test_accuracies,
+                              'Confusion matrix': cms})
     
     # Creating dataframe from the results for figure generation
     figure_report = pd.DataFrame({'models': score_res_names,
@@ -290,6 +374,9 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     configure_legend(labelFontSize = 15,
                      titleFontSize=15).\
     save(figure_filepath)
+
+    # Saving confusion matrix
+    save_confusion_matrix(names, cms, './reports/confusion_matrix.png')
 
 
 def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
