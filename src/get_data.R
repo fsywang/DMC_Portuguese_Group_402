@@ -36,7 +36,9 @@ main <- function () {
 
 download_data <- function(url, dir, filepath) {
 	return(tryCatch({
-		dir.create(dir, recursive = TRUE)
+		if(!dir.exists(dir)){
+			dir.create(dir, recursive = TRUE)
+		}
 		print('Downloading file')
 		download.file(url, filepath)
 
