@@ -278,10 +278,18 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
 
     # Saving figure
     alt.Chart(figure_report).mark_circle(size=100).encode(
-        x = 'test_scores',
-        y = 'train_scores',
+        x = alt.X('test_scores', axis = alt.Axis(title='Test F1 score')),
+        y = alt.Y('train_scores',  axis = alt.Axis(title='Test F1 score')),
         color = 'models').properties(
-        title = 'Train and Test F1 scores of all methods tested').save(figure_filepath)
+        title = 'Train and Test scores of all methods tested').\
+    configure_axis(
+        labelFontSize=15,
+        titleFontSize=15
+    ).\
+    configure_legend(labelFontSize = 15,
+                     titleFontSize=15).\
+    save(figure_filepath)
+
 
 def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
                         test_csv_path = '../data/clean/bank_test.csv'):
