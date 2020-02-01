@@ -84,7 +84,7 @@ def train_lgb(X_train, y_train, X_test, y_test, epochs = 1000, early_stopping = 
 
     Returns
     -------
-    tuple: (model, parameters, Train F1 score, Test F1 score, Test accuracy)
+    tuple: (model, parameters, Train F1 score, Test F1 score, Test accuracy, confusion_matrix)
         
     Examples
     --------
@@ -169,7 +169,7 @@ def hyperparameter_tuning_and_report(classifier, parameters, X, y, X_test=None, 
 
     Returns
     -------
-    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy, Mean Train scores, Mean Test scores)
+    tuple: (best model, best parameters, Train F1 score, Test F1 score, Test accuracy, Mean Train scores, Mean Test scores, confusion_matrices)
         
     Examples
     --------
