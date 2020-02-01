@@ -32,11 +32,11 @@ reports/training_report.csv reports/training_report.png : data/clean/bank_train.
 
 # clean up intermediate results file
 clean_all : 
-	rm -r data
-	rm -r reports
+	rm -rf -d data
+	rm -rf -d reports
 
 clean_data :
-	rm -r data
+	rm -rf -d data
 
 
 
