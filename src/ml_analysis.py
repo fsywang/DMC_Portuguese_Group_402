@@ -253,9 +253,10 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
         test_f1s.append(model[3])
         test_accuracies.append(model[4])
     
-        train_score_results.extend(model[5])
-        test_score_results.extend(model[6])
-        score_res_names.extend([model[0].__class__.__name__]*len(model[5]))
+        if model[0].__class__.__name__ != 'Booster':
+            train_score_results.extend(model[5])
+            test_score_results.extend(model[6])
+            score_res_names.extend([model[0].__class__.__name__]*len(model[5]))
 
     # Creating dataframe from the results
     csv_report = pd.DataFrame({'Model name': names,
