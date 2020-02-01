@@ -16,8 +16,8 @@
 all: data/raw/bank.csv data/clean/bank_train.csv data/clean/bank_test.csv data/clean/bank_train_uprocessed.csv reports/count_of_cat_features.png reports/density_plot.png reports/kendall_corr_matrix.png reports/pearson_corr_matrix.png reports/proportion_of_class.png reports/training_report.csv reports/training_report.png
 
 # download script
-data/raw/bank.csv : src/get_data.py
-	python src/get_data.py --save_dir=data/raw/
+data/raw/bank.csv : src/get_data.R
+	Rscript src/get_data.R --out_dir=data/raw/
 
 # data preprocessing
 data/clean/bank_train.csv data/clean/bank_test.csv data/clean/bank_train_uprocessed.csv : data/raw/bank.csv src/preprocessing.py
