@@ -20,7 +20,7 @@ main <- function () {
 
 	filename <- gsub("^.*/", "", arguments$url)
 	filepath <- file.path(arguments$out_dir, filename)
-	if(!download_data(arguments$url, filepath)){
+	if(!download_data(arguments$url, arguments$out_dir, filepath)){
 		return()
 	}
 	
@@ -34,8 +34,9 @@ main <- function () {
 	}
 }
 
-download_data <- function(url, filepath) {
+download_data <- function(url, dir, filepath) {
 	return(tryCatch({
+		dir.create(dir, recursive = TRUE)
 		print('Downloading file')
 		download.file(url, filepath)
 

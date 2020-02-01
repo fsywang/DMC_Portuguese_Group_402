@@ -253,9 +253,10 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
         test_f1s.append(model[3])
         test_accuracies.append(model[4])
     
-        train_score_results.extend(model[5])
-        test_score_results.extend(model[6])
-        score_res_names.extend([model[0].__class__.__name__]*len(model[5]))
+        if model[0].__class__.__name__ != 'Booster':
+            train_score_results.extend(model[5])
+            test_score_results.extend(model[6])
+            score_res_names.extend([model[0].__class__.__name__]*len(model[5]))
 
     # Creating dataframe from the results
     csv_report = pd.DataFrame({'Model name': names,
@@ -278,10 +279,18 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
 
     # Saving figure
     alt.Chart(figure_report).mark_circle(size=100).encode(
-        x = 'test_scores',
-        y = 'train_scores',
+        x = alt.X('test_scores', axis = alt.Axis(title='Cross-Val Test F1 score')),
+        y = alt.Y('train_scores',  axis = alt.Axis(title='Cross-Val Train F1 score')),
         color = 'models').properties(
-        title = 'Train and Test F1 scores of all methods tested').save(figure_filepath)
+        title = 'Train and Test scores of all methods tested').\
+    configure_axis(
+        labelFontSize=15,
+        titleFontSize=15
+    ).\
+    configure_legend(labelFontSize = 15,
+                     titleFontSize=15).\
+    save(figure_filepath)
+
 
 def read_data_and_split(train_csv_path = '../data/clean/bank_train.csv',
                         test_csv_path = '../data/clean/bank_test.csv'):
