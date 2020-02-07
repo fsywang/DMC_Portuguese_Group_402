@@ -363,8 +363,12 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
 
     # Saving figure
     alt.Chart(figure_report).mark_circle(size=100).encode(
-        x = alt.X('test_scores', axis = alt.Axis(title='Cross-Val Test F1 score')),
-        y = alt.Y('train_scores',  axis = alt.Axis(title='Cross-Val Train F1 score')),
+        x = alt.X('test_scores',
+            axis = alt.Axis(title='Cross-Val Test F1 score'),
+            scale = alt.Scale(domain = (0., 1.))),
+        y = alt.Y('train_scores',
+            axis = alt.Axis(title='Cross-Val Train F1 score'),
+            scale = alt.Scale(domain=(0., 1.))),
         color = 'models').properties(
         title = 'Train and Test scores of all methods tested').\
     configure_axis(
@@ -373,8 +377,8 @@ def generate_csv_and_figure_reports(arr, csv_filepath, figure_filepath):
     ).\
     configure_legend(labelFontSize = 15,
                      titleFontSize=15).\
+    configure_title(fontSize=20).\
     save(figure_filepath)
-
     # Saving confusion matrix
     save_confusion_matrix(names, cms, './reports/confusion_matrix.png')
 
