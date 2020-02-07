@@ -17,6 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 from docopt import docopt
+import numpy as np
 
 
 opt = docopt(__doc__)
@@ -42,27 +43,33 @@ def main(train, out_dir):
     #proportion plot
     p0 = alt.Chart(bank_train, title = "Proportion of two classes").mark_bar().encode(
         x = alt.X('count()'),
-        y = alt.Y('y:O'))
+        y = alt.Y('y:O',title = '')).configure_title(fontSize=20).configure_axis(labelFontSize=13,titleFontSize=15)
     
     p0.save( out_dir + "/proportion_of_class.png")
     
     #pearson corrlation matrix plot
-    pearson_corr_matrix = sns.heatmap(bank_train.corr(), annot=True)
-    pearson_corr_matrix.set_title('Pearson correlation matrix')
+    sns.set(rc={'figure.figsize':(8,6)},font_scale=1.3)
+    pearson_corr_matrix = sns.heatmap(bank_train.corr().round(2), annot=True,
+           mask = np.triu(np.ones_like(bank_train.corr(), dtype=np.bool), 1),
+            cmap = sns.diverging_palette(200, 16, as_cmap=True)
+    ).set_title('Pearson correlation matrix',fontsize = 25) 
     p1 = pearson_corr_matrix.get_figure()
     p1.savefig( out_dir + "/pearson_corr_matrix.png")
     
     plt.clf()
     #kendall corrlation matrix plot
-    kendall_corr_matrix = sns.heatmap(bank_train.corr(method='kendall'), 
-                                      annot=True)
-    kendall_corr_matrix.set_title('Kendall correlation matrix')
+    sns.set(rc={'figure.figsize':(8,6)},font_scale=1.3)
+    kendall_corr_matrix = sns.heatmap(bank_train.corr(method='kendall').round(2), annot=True,
+           mask = np.triu(np.ones_like(bank_train.corr(method='kendall'), dtype=np.bool), 1),
+            cmap = sns.diverging_palette(200, 16, as_cmap=True)
+    ).set_title('Kendall correlation matrix',fontsize = 25)
     p2 = kendall_corr_matrix.get_figure()
     p2.savefig( out_dir + "/kendall_corr_matrix.png")
 
 
     #density plot
-    density_plot= make_num_plot(bank_train, 'pdays') | make_num_plot(bank_train, 'duration')
+    density_plot= (make_num_plot(bank_train,'pdays') | make_num_plot(bank_train,'duration')).configure_title(fontSize=20).configure_axis(
+    labelFontSize=13,titleFontSize=15)
     density_plot.save( out_dir + "/density_plot.png")
     # plot count
     p = make_cat_plot(bank_train, ['job', 'default']) | make_cat_plot(bank_train, ['education', 'loan']) | make_cat_plot(bank_train, ['marital', 'housing'])
@@ -94,9 +101,9 @@ def make_cat_plot(dat, cat_list):
     """
 
     cat_p  = alt.Chart(dat).mark_bar(opacity = 0.8).encode(
-        alt.X(alt.repeat("row"), type = 'nominal'),
-        alt.Y("count()"),
-        color='y'
+        alt.X("count()"),
+        alt.Y(alt.repeat("row"), type = 'nominal'),
+        color=alt.Color('y', legend=None)
     ).properties(
             width=200,
             height=150
