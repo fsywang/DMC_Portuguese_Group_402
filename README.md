@@ -13,7 +13,35 @@ The final report can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_G
 
 # Usage
 
-To replicate the analysis, clone this GitHub repository, install all [dependencies](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt), and run the following command from the root of the repo:
+There are two suggested ways to run this analysis:
+
+#### 1. Using Docker
+*note - the instructions in this section also depends on running this in a unix shell (e.g., terminal or Git Bash), if you are using Windows Command Prompt, replace `/$(pwd)` with PATH_ON_YOUR_COMPUTER.*
+
+1. Install [Docker](https://www.docker.com/get-started)
+2. Download/clone this repository
+3. Use the command line to navigate to the root of this downloaded/cloned repo
+4. Type the following:
+
+To recreate the project:
+```
+docker run  --rm -v /$(pwd):/home/DMC_Portuguese_Group_402 sgauravm/dmc-portuguese-data-analysis make -C /home/DMC_Portuguese_Group_402 all
+```
+*Note: Linux user might have to append sudo before the command above*
+
+To bring the project to original state:
+```
+docker run  --rm -v /$(pwd):/home/DMC_Portuguese_Group_402 sgauravm/dmc-portuguese-data-analysis make -C /home/DMC_Portuguese_Group_402 clean_all
+```
+
+To only clean the data so that report images render:
+```
+docker run  --rm -v /$(pwd):/home/DMC_Portuguese_Group_402 sgauravm/dmc-portuguese-data-analysis make -C /home/DMC_Portuguese_Group_402 clean_data
+```
+
+#### 2. After installing all dependencies (does not depend on Docker)
+
+Clone this GitHub repository, install all [dependencies](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt), and run the following command from the root of the repo:
 
 ```
 make all
@@ -32,6 +60,10 @@ make clean_data
 # Dependencies
 
 The dependencies can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_Group_402/blob/master/requirements.txt)
+
+# Dependency Diagram
+
+![dependency_diagram.png]()
 
 # Reference
 
