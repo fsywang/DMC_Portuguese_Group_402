@@ -63,7 +63,7 @@ The dependencies can be found [here](https://github.com/UBC-MDS/DMC_Portuguese_G
 
 # Dependency Diagram
 
-![dependency_diagram.png]()
+<img src='dependency_diagram.png'>
 
 # Reference
 
