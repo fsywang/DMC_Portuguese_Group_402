@@ -103,7 +103,7 @@ def make_cat_plot(dat, cat_list):
     cat_p  = alt.Chart(dat).mark_bar(opacity = 0.8).encode(
         alt.X("count()"),
         alt.Y(alt.repeat("row"), type = 'nominal'),
-        color=alt.Color('y', legend=None)
+        color='y'
     ).properties(
             width=200,
             height=150
