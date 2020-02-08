@@ -3,14 +3,14 @@
 requests==2.22.0
 pandas==0.25.1
 altair==4.0.0
-seaborn==0.9.0
+seaborn==0.10.0
 matplotlib==3.1.1
-sklearn==0.21.3
-lightgbm==2.3.2
+scikit-learn==0.22.1
 numpy==1.18.1
 tqdm==4.37.0
 docopt==0.6.2
-selenium = 3.141.0
+selenium==3.141.0
+lightgbm==2.3.1
 
 
 - R version 3.6.1 and R packages:
