@@ -2,7 +2,7 @@
 # portugese financial institution client
 # data to predict of a customer will 
 # subscribe to a term deposit or not.
-# Gaurav Sinha, Feb, 2020
+# Gaurav Sinha,Karlos Muradyan, Shiying Feb, 2020
 
 # use continuumio/anaconda3 as the base image 
 FROM continuumio/anaconda3
